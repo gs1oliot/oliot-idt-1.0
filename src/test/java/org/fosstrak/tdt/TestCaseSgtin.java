@@ -248,6 +248,10 @@ public class TestCaseSgtin extends TestCase
 	String s = engine.convert(orig,
 				  params,
 				  LevelTypeList.BINARY);
+
+	String e = engine.cityHubIDTranslate("GTIN", "0003700",
+				"1041970", "0302414",
+				"LEGACY_AI");
 	//               ................................................................................................
 	String expect = "001011110000001000000011001001010011001100010011100100110100001011011111110111000001110000110101";
 	//                  2   f   0   2   0   3   2   5   3   3   1   3   9   3   4   2   d   f   d   c   1   c   3   5

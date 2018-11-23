@@ -112,6 +112,8 @@ public class TDTEngine {
 	/** The gepc64 table xml. */
 	private String GEPC64xml;
 
+	private Map<String,String> params;
+
 	// ----------------/
 	// - Constructors -/
 	// ----------------/
@@ -847,6 +849,100 @@ public class TDTEngine {
 		return convertLevel(match.getScheme(), match.getLevel(), input, inputParameters, outputLevel);
 				
 				
+	}
+
+	/**
+	 */
+	public String cityHubIDTranslate(String idType, String companyPrefix,
+									 String serialNumber, String referrenceNumber,
+									 String outputFormat) {
+		params = new HashMap<String,String>();
+
+		params.put("taglength", "96");
+		params.put("filter", "3");
+		params.put("gs1companyprefixlength", String.valueOf(companyPrefix.length()));
+
+		String inputCode = companyPrefix + referrenceNumber;
+		String serial = serialNumber;
+		String orig = null;
+		LevelTypeList level_type = null;
+
+
+		String code = idType;
+		if ("GTIN".equals(code)) {
+			orig = "gtin=" + inputCode + ";" + "serial=" + serial;
+
+		} else if ("GLN".equals(code)) {
+			orig = "gln=" + inputCode + ";" + "serial=" + serial;
+
+		} else if ("SSCC".equals(code)) {
+			orig = "sscc=" + inputCode + ";" + "serial=" + serial;
+
+		} else if ("GRAI".equals(code)) {
+			orig = "grai=" + inputCode + ";" + "serial=" + serial;
+
+		} else if ("GIAI".equals(code)) {
+			orig = "giai=" + inputCode + ";" + "serial=" + serial;
+
+		} else if ("GSRN".equals(code)) {
+			orig = "gsrn=" + inputCode + ";" + "serial=" + serial;
+
+		} else if ("GINC".equals(code)) {
+			orig = "ginc=" + inputCode + ";" + "serial=" + serial;
+
+		} else if ("GSIN".equals(code)) {
+			orig = "gsin=" + inputCode + ";" + "serial=" + serial;
+
+		} else if ("GCN".equals(code)) {
+			orig = "gcn=" + inputCode + ";" + "serial=" + serial;
+
+		} else if ("CPID".equals(code)) {
+			orig = "cpid=" + inputCode + ";" + "serial=" + serial;
+
+		} else if ("GMN".equals(code)) {
+			orig = "gmn=" + inputCode + ";" + "serial=" + serial;
+
+		} else {
+			debugprintln("***EXCEPTION: Wrong input type of typeID");
+			throw new TDTException("Wrong input type of typeID");
+		}
+
+		if("LEGACY_AI".equals(outputFormat))
+			level_type = LevelTypeList.LEGACY;
+		else if ("PURE_IDENTITY".equals(outputFormat))
+			level_type = LevelTypeList.PURE_IDENTITY;
+		else if ("ONS_HOSTNAME".equals(outputFormat))
+			level_type = LevelTypeList.ONS_HOSTNAME;
+		else {
+			debugprintln("***EXCEPTION: Wrong input type of outputFormat");
+			throw new TDTException("Wrong input type of outputFormat");
+		}
+		Map<String, String> inputParameters=params;
+
+		Iterator i=inputParameters.keySet().iterator();
+		while (i.hasNext()) {
+			String key = i.next().toString();
+			debugprintln(key + "=" + inputParameters.get(key));
+		}
+
+		String tagLength = null;
+		String decodedinput;
+		String encoded;
+
+		if (inputParameters.containsKey("taglength")) {
+			// in principle, the user should provide a
+			// TagLengthList object in the parameter list.
+			String len = inputParameters.get("taglength");
+			tagLength = len;
+
+			debugprintln("taglength was provided.  tagLength = "+len);
+		}
+
+		PrefixMatch2 matchtemp = findPrefixMatch(orig, params.get("taglength"));
+		PrefixMatch match = new PrefixMatch(matchtemp.getScheme(),matchtemp.getLevel());
+		inputParameters.put("taglength",matchtemp.getTaglength());
+
+		return convertLevel(match.getScheme(), match.getLevel(), orig, inputParameters, level_type);
 	}
 
 	/**
