@@ -91,7 +91,6 @@ public class TDTEngine {
 
 	final Boolean showdebug=true; // if true, print any debug messages;
 
-	
 	/**
 	 * prefix_tree_map is a map of levels to prefix trees. Each prefix tree is a
 	 * Trie structure (see wikipedia) that is useful for quickly finding a
@@ -114,6 +113,12 @@ public class TDTEngine {
 
 	private Map<String,String> params;
 
+	// typeMap that convert type to idType, and serialPrefix
+	Map<String, ArrayList<String>> typeMap = new HashMap<String, ArrayList<String>>();
+	// geoMap that convert geolocation to companyPrefix, and referenceNumber
+	Map<String, ArrayList<String>> geoMap = new HashMap<String, ArrayList<String>>();
+
+	
 	// ----------------/
 	// - Constructors -/
 	// ----------------/
@@ -852,10 +857,25 @@ public class TDTEngine {
 	}
 
 	/**
+	 * The cityHubIDTranslate method translates a String inputs to a specified outbound
+	 * level of the same coding scheme. 
+	 * 
+	 * @param idType
+	 *            the GS1 ID type of GS1 code including GTIN, GLN, SSCC, GRAI, GIAI, GSRN, and GDTI.
+	 * @param companyPrefix
+	 *            the GS1 prefix and companyprefix of GS1 code.
+	 * @param referenceNumber
+	 *            the referencenumber of GS1 code.
+	 * @param serialNumber
+	 *            the serialnumber of GS1 code.
+	 * @param outputFormat
+	 *            the outbound level required for the ouput. Permitted values
+	 *            include PURE_IDENTITY, LEGACY and ONS_HOSTNAME.
+	 * @return the identifier converted to the output format.
 	 */
 	public String cityHubIDTranslate(String idType, String companyPrefix,
-									 String serialNumber, String referrenceNumber,
-									 String outputFormat) {
+						 String referenceNumber, String serialNumber, 
+						 String outputFormat) {
 		params = new HashMap<String,String>();
 
 		params.put("taglength", "96");
@@ -886,6 +906,9 @@ public class TDTEngine {
 
 		} else if ("GSRN".equals(code)) {
 			orig = "gsrn=" + inputCode + ";" + "serial=" + serial;
+
+		} else if ("GDTI".equals(code)) {
+			orig = "gdti=" + inputCode + ";" + "serial=" + serial;
 
 		} else if ("GINC".equals(code)) {
 			orig = "ginc=" + inputCode + ";" + "serial=" + serial;
@@ -945,6 +968,147 @@ public class TDTEngine {
 		return convertLevel(match.getScheme(), match.getLevel(), orig, inputParameters, level_type);
 	}
 
+	/**
+	 * The cityHubAddTypeMap method adds hashmap value of type. 
+	 * key is data model name, idType is GS1 ID type, 
+	 * and serialPrefix is prefix of serialnumber. 
+	 * 
+	 * @param key
+	 *            the data model name. For example, "parking area", and "weather forecast".
+	 * @param idType
+	 *            the GS1 ID type of this data model.
+	 * @param serialPrefix
+	 *            the serialPrefix number of this data model.
+	 * @return the added typeMap value.
+	 */
+	String cityHubAddTypeMap(String key, String idType, String serialPrefix)
+	{
+		ArrayList<String> value = new ArrayList<String>;
+		value.add(idType);
+		value.add(serialPrefix);
+		typeMap.put(key, value);
+
+		return typeMap.get(key).toString();
+	}
+
+	/**
+	 * The cityHubAddGeoMap method adds hashmap value of geo location. 
+	 * key is goelocation name, companyPrefix is company prefix of geolocation, 
+	 * and referenceNumber is refer number of geolocation. 
+	 * 
+	 * @param key
+	 *            the geo location name. For example, "sungnam-si bundang-gu deuk-dong".
+	 * @param companyPrefix 
+	 *            the company prefix of this geo location providing by GS1 Korea.
+	 * @param referenceNumber
+	 *            the reference number of this geo locatino providing by City.
+	 * @return the added geoMap value.
+	 */
+	String cityHubAddGeoMap(String key, String companyPrefix, String referenceNumber)
+	{
+		ArrayList<String> value = new ArrayList<String>;
+		value.add(companyPrefix);
+		value.add(referenceNumber);
+		geoMap.put(key, value);
+
+		return geoMap.get(key).toString();
+	}
+
+	/**
+	 * The cityHubIDCreate method create GS1 code as a specified outbound level. 
+	 * 
+	 * @param dataType
+	 *            the key value of data model to find GS1 idtype, and serialPrefix.
+	 * @param dataID
+	 *            the local ID of data model.
+	 * @param geoLocation
+	 *            the key value of geo location to find companyPrefix, and referenceNumber.
+	 * @return the identifier created to the PURE_IDENTITY outbound level.
+	 */
+	String cityHubIDCreate(String dataType, String dataID, String geoLocation)
+	{
+		String idType = typeMap.get(dataType)[0];
+		String serialPrefix = typeMap.get(dataType)[1];
+		String companyPrefix = geoMap.get(geoLocation)[0];
+		String referenceNumber = geoMap.get(geoLocation)[1];
+
+		String inputCode = companyPrefix + referenceNumber;
+		String serial = serialPrefix + dataID;
+
+		String orig = null;
+		String code = idType;
+		params = new HashMap<String,String>();
+
+		if ("GTIN".equals(code)) {
+			orig = "gtin=" + inputCode + ";" + "serial=" + serial;
+			params.put("taglength", "198");
+		} else if ("GLN".equals(code)) {
+			orig = "gln=" + inputCode + ";" + "serial=" + serial;
+			params.put("taglength", "195");
+		} else if ("SSCC".equals(code)) {
+			orig = "sscc=" + inputCode + ";" + "serial=" + serial;
+			params.put("taglength", "96");
+		} else if ("GRAI".equals(code)) {
+			orig = "grai=" + inputCode + ";" + "serial=" + serial;
+			params.put("taglength", "96");
+		} else if ("GIAI".equals(code)) {
+			orig = "giai=" + inputCode + ";" + "serial=" + serial;
+			params.put("taglength", "202");
+		} else if ("GSRN".equals(code)) {
+			orig = "gsrn=" + inputCode + ";" + "serial=" + serial;
+			params.put("taglength", "96");
+		} else if ("GDTI".equals(code)) {
+			orig = "gdti=" + inputCode + ";" + "serial=" + serial;
+			params.put("taglength", "113");
+		} else if ("GINC".equals(code)) {
+			orig = "ginc=" + inputCode + ";" + "serial=" + serial;
+			params.put("taglength", "198");
+		} else if ("GSIN".equals(code)) {
+			orig = "gsin=" + inputCode + ";" + "serial=" + serial;
+			params.put("taglength", "198");
+		} else if ("GCN".equals(code)) {
+			orig = "gcn=" + inputCode + ";" + "serial=" + serial;
+			params.put("taglength", "198");
+		} else if ("CPID".equals(code)) {
+			orig = "cpid=" + inputCode + ";" + "serial=" + serial;
+			params.put("taglength", "198");
+		} else if ("GMN".equals(code)) {
+			orig = "gmn=" + inputCode + ";" + "serial=" + serial;
+			params.put("taglength", "198");
+		} else {
+			throw new TDTException("Wrong input type of typeID");
+		}
+
+		params.put("filter", "3");
+		params.put("gs1companyprefixlength", String.valueOf(companyPrefix.length()));
+		LevelTypeList level_type = LevelTypeList.PURE_IDENTITY;
+
+		Map<String, String> inputParameters=params;
+
+		Iterator i=inputParameters.keySet().iterator();
+		while (i.hasNext()) {
+			String key = i.next().toString();
+		}
+
+		String tagLength = null;
+		String decodedinput;
+		String encoded;
+
+		if (inputParameters.containsKey("taglength")) {
+			// in principle, the user should provide a
+			// TagLengthList object in the parameter list.
+			String len = inputParameters.get("taglength");
+			tagLength = len;
+		}
+
+		PrefixMatch2 matchtemp = findPrefixMatch(orig, params.get("taglength"));
+		PrefixMatch match = new PrefixMatch(matchtemp.getScheme(),matchtemp.getLevel());
+		inputParameters.put("taglength",matchtemp.getTaglength());
+
+		return convertLevel(match.getScheme(), match.getLevel(), orig, inputParameters, level_type);
+	}
+
+	
 	/**
 	 * convert from a particular scheme / level
 	 */
