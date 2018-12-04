@@ -1017,7 +1017,7 @@ public class TDTEngine {
 	/**
 	 * The cityHubIDCreate method create GS1 code as a specified outbound level. 
 	 * 
-	 * @param dataType
+	 * @param dataModel
 	 *            the key value of data model to find GS1 idtype, and serialPrefix.
 	 * @param dataID
 	 *            the local ID of data model.
@@ -1025,10 +1025,10 @@ public class TDTEngine {
 	 *            the key value of geo location to find companyPrefix, and referenceNumber.
 	 * @return the identifier created to the PURE_IDENTITY outbound level.
 	 */
-	String cityHubIDCreate(String dataType, String dataID, String geoLocation)
+	String cityHubIDCreate(String dataModel, String dataID, String geoLocation)
 	{
-		String idType = typeMap.get(dataType)[0];
-		String serialPrefix = typeMap.get(dataType)[1];
+		String idType = typeMap.get(dataModel)[0];
+		String serialPrefix = typeMap.get(dataModel)[1];
 		String companyPrefix = geoMap.get(geoLocation)[0];
 		String referenceNumber = geoMap.get(geoLocation)[1];
 
